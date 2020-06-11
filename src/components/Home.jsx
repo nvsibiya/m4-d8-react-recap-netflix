@@ -6,13 +6,59 @@ class Home extends Component {
   constructor(props) {
     super(props);
     this.state = {
-      displayGallery: true,
+      transformers: [],
+      spiderMan: [],
+      matrix: [],
+      error: false,
+      laoding: true,
+      comments: [],
     };
   }
 
+  // url = "http://www.omdbapi.com/?apikey=fbcf9bfb";
+
   componentDidMount() {
+    Promise.all([
+    fetch ("http://www.omdbapi.com/?apikey=fbcf9bfb" + "&s=transformers")
+      .then((response) => response.json())
+      .then((responseObject) =>
+        this.setState({ transformers: responseObject.Search})
+        ),
+    
+    fetch ("http://www.omdbapi.com/?apikey=fbcf9bfb" + "&s=spider%20man")
+      .then((response) => response.json())
+      .then((responseObject) =>
+        this.setState({ spiderMan: responseObject.Search})
+        ),
+
+    fetch ("http://www.omdbapi.com/?apikey=fbcf9bfb" + "&s=matrix")
+        .then((response) => response.json())
+        .then((responseObject) =>
+          this.setState({ matrix: responseObject.Search})
+          ),
+      ])
+        .then(()  => this.setState ({ laoding: false}))
+        .catch((err) => {
+          this.setState({error: true})
+          console.log("An error has occured:", err)
+        }
+        );
+
     // console.log("componentDidMount");
   }
+
+  fetchComments = async (movieID) => {
+    const commentsUrl = "https://striveshool.herokuapp.com/api/comments/";
+    const comments = await fetch(commentsUrl + movieID, {
+      headers: new Headers({
+        Authorization: "Basic dXN1cjc6M1VVNWRnZ1b1J1U1A3RQ==",
+      }),
+  }).then((resp) => resp.json());
+  this.setState ({comments}); 
+ 
+
+}
+
 
   render() {
     // console.log("render method");
@@ -56,14 +102,32 @@ class Home extends Component {
             </Row>
 
         <Gallery /> */}
-
-        {this.state.displayGallery && (
+        {this.state.error && (
+          <alert variant="danger">
+            An error has occured, please try again later.
+          </alert>
+        )}
+        {!this.state.error && !this.state.laoding && (
           <div>
             {/* This Gallery will not receive props.title inside, only props.imageSrc */}
-            <Gallery imageSrc="/assets/6.png" />
-
-            <Gallery title="Trending" imageSrc="/assets/8.png" />
-            <Gallery title="Horror" imageSrc="/assets/7.png" />
+            <Gallery 
+            title="Transformers"
+            loading={this.state.loading}
+            movies={this.state.transformers.slice(0, 6)} 
+            comments={this.state.comments}
+            />
+            <Gallery 
+            title="Spider Man"
+            loading={this.state.loading}
+            movies={this.state.spiderMan.slice(0, 6)} 
+            comments={this.state.comments}
+            />
+            <Gallery 
+            title="Matrix"
+            loading={this.state.loading}
+            movies={this.state.matrix.slice(0, 6)} 
+            comments={this.state.comments}
+            />
           </div>
         )}
       </Container>
